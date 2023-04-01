@@ -1,8 +1,23 @@
 import { SignInButton, SignOutButton, useUser } from "@clerk/nextjs";
 import { type NextPage } from "next";
 import Head from "next/head";
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import updateLocale from "dayjs/plugin/updateLocale";
+import { api } from "~/utils/api";
+import type { RouterOutputs } from "~/utils/api";
+import Image from "next/image";
 
-import { RouterOutputs, api } from "~/utils/api";
+type PostWithUser = RouterOutputs["posts"]["getAll"][number];
+
+dayjs.extend(relativeTime);
+dayjs.extend(updateLocale);
+dayjs.updateLocale("es", {
+  relativeTime: {
+    m: "m",
+    h: "h",
+  },
+});
 
 const CreatePostWizard = () => {
   const { user } = useUser();
@@ -13,10 +28,12 @@ const CreatePostWizard = () => {
 
   return (
     <div className="flex gap-4">
-      <img
+      <Image
         src={user.profileImageUrl}
         alt="profile image"
         className="h-12 w-12 rounded-full"
+        width={48}
+        height={48}
       />
       <input
         type="text"
@@ -27,22 +44,23 @@ const CreatePostWizard = () => {
   );
 };
 
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
-
 const PostView = (props: PostWithUser) => {
   const { post, author } = props;
   return (
     <div className="flex cursor-pointer flex-row gap-3 border-b border-b-zinc-700 px-4 py-3 transition-all duration-200 hover:bg-zinc-950">
-      <img
+      <Image
         className="h-12 w-12 rounded-full"
         src={author.profileImageUrl}
-        alt={`${author?.name}'s profile picture`}
+        alt={`${author.username}'s profile picture`}
+        width={48}
+        height={48}
       />
       <div className="flex flex-col">
         <div className="flex flex-row space-x-1">
           <div className="font-bold">{author?.name}</div>
           <div className="text-zinc-500">@{author?.username}</div>
-          <div className="ml-2 text-zinc-500">·</div>
+          <span className="ml-2 text-zinc-500">·</span>
+          <div className="text-zinc-500">{dayjs(post.createdAt).fromNow()}</div>
         </div>
         <div>{post.content}</div>
       </div>
