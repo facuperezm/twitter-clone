@@ -1,34 +1,38 @@
-import { SignInButton, useUser } from "@clerk/nextjs";
-import { type NextPage } from "next";
+import React from "react";
+import Image from "next/image";
 import Head from "next/head";
+import { SignInButton, useUser } from "@clerk/nextjs";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import updateLocale from "dayjs/plugin/updateLocale";
 import { api } from "~/utils/api";
-import type { RouterOutputs } from "~/utils/api";
-import Image from "next/image";
 import { LoadingPage } from "~/components/loading";
 
+import type { NextPage } from "next";
+import type { RouterOutputs } from "~/utils/api";
 type PostWithUser = RouterOutputs["posts"]["getAll"][number];
 
 dayjs.extend(relativeTime);
-dayjs.extend(updateLocale);
-dayjs.updateLocale("es", {
-  relativeTime: {
-    m: "m",
-    h: "h",
-  },
-});
 
 const CreatePostWizard = () => {
+  const [input, setInput] = React.useState("");
+
   const { user } = useUser();
+
+  const ctx = api.useContext();
+
+  const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
+    onSuccess: () => {
+      setInput("");
+      void ctx.posts.getAll.invalidate();
+    },
+  });
 
   if (!user) return null;
 
   console.log(user, "user");
 
   return (
-    <div className="flex gap-4">
+    <div className="flex w-full gap-4">
       <Image
         src={user.profileImageUrl}
         alt="profile image"
@@ -38,9 +42,21 @@ const CreatePostWizard = () => {
       />
       <input
         type="text"
-        className="grow bg-transparent text-xl outline-none"
+        max={280}
+        className="w-full bg-transparent text-xl outline-none disabled:cursor-progress disabled:text-zinc-500"
         placeholder="What's happening?"
+        value={input}
+        disabled={isPosting}
+        onChange={(e) => setInput(e.target.value)}
       />
+
+      <button
+        onClick={() => mutate({ content: input })}
+        className="my-auto h-10 rounded-3xl bg-sky-500 px-4 font-bold text-white disabled:bg-sky-600 disabled:text-zinc-200"
+        disabled={isPosting || input.length === 0}
+      >
+        Tweet
+      </button>
     </div>
   );
 };
