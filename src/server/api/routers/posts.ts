@@ -69,7 +69,8 @@ export const postsRouter = createTRPCRouter({
       if (!success) {
         throw new TRPCError({
           code: "TOO_MANY_REQUESTS",
-      });
+        });
+      }
 
       const post = await ctx.prisma.posts.create({
         data: {
