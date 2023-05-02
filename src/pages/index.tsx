@@ -7,18 +7,15 @@ import { api } from "~/utils/api";
 import { LoadingPage, LoadingSpinner } from "~/components/loading";
 
 import type { NextPage } from "next";
-import type { RouterOutputs } from "~/utils/api";
 import { toast } from "react-hot-toast";
-import Link from "next/link";
-type PostWithUser = RouterOutputs["posts"]["getAll"][number];
+import { PageLayout } from "~/components/layout";
+import { PostView } from "~/components/postview";
 
 dayjs.extend(relativeTime);
 
 const CreatePostWizard = () => {
-  const [input, setInput] = React.useState("");
-
   const { user } = useUser();
-
+  const [input, setInput] = React.useState("");
   const ctx = api.useContext();
 
   const { mutate, isLoading: isPosting } = api.posts.create.useMutation({
@@ -84,39 +81,6 @@ const CreatePostWizard = () => {
   );
 };
 
-const PostView = (props: PostWithUser) => {
-  const { post, author } = props;
-  return (
-    <div className="flex cursor-pointer flex-row gap-3 border-b border-b-zinc-700 px-4 py-3 transition-all duration-200 hover:bg-zinc-950">
-      <Image
-        className="h-12 w-12 rounded-full"
-        src={author.profileImageUrl}
-        alt={`${author.username}'s profile picture`}
-        width={48}
-        height={48}
-      />
-      <div className="flex flex-col">
-        <div className="flex flex-row space-x-1">
-          <Link
-            className="flex flex-row space-x-1"
-            href={`/@{author.username}`}
-          >
-            <div className="font-bold">{author?.name}</div>
-            <div className="text-zinc-500">@{author?.username}</div>
-            <span className="ml-2 text-zinc-500">·</span>
-          </Link>
-          <Link href={`/post/${post.id}`}>
-            <div className="text-zinc-500">
-              {dayjs(post.createdAt).fromNow()}
-            </div>
-          </Link>
-        </div>
-        <div>{post.content}</div>
-      </div>
-    </div>
-  );
-};
-
 const Feed = () => {
   const { data, isLoading: postLoading } = api.posts.getAll.useQuery();
 
@@ -142,19 +106,17 @@ const Home: NextPage = () => {
 
   return (
     <>
-      <main className="flex h-screen justify-center">
-        <div className="h-full w-full border-x border-zinc-700 md:max-w-[598px]">
-          <div className="flex border-b border-zinc-700 p-4">
-            {!isSignedIn && (
-              <div className="flex justify-center">
-                <SignInButton />
-              </div>
-            )}
-            {isSignedIn && <CreatePostWizard />}
-          </div>
-          <Feed />
+      <PageLayout>
+        <div className="flex border-b border-zinc-700 p-4">
+          {!isSignedIn && (
+            <div className="flex justify-center">
+              <SignInButton />
+            </div>
+          )}
+          {isSignedIn && <CreatePostWizard />}
         </div>
-      </main>
+        <Feed />
+      </PageLayout>
     </>
   );
 };

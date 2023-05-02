@@ -4,4 +4,5 @@
 
 body {
   @apply bg-black text-gray-100;
+  overscroll-behavior: none;
 }
