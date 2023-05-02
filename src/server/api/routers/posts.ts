@@ -16,12 +16,11 @@ const ratelimit = new Ratelimit({
   limiter: Ratelimit.slidingWindow(3, "1 m"),
   analytics: true,
 });
-
 const addUserDataToPosts = async (posts: Posts[]) => {
-  const userId = posts.map((post) => post.authorId);
+  const userIds = posts.map((post) => post.authorId);
   const users = (
     await clerkClient.users.getUserList({
-      userId: userId,
+      userId: userIds,
       limit: 110,
     })
   ).map(filterUserForClient);
@@ -31,13 +30,10 @@ const addUserDataToPosts = async (posts: Posts[]) => {
 
     if (!author) {
       console.error("AUTHOR NOT FOUND", post);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: `Author for post not found. POST ID: ${post.id}, USER ID: ${post.authorId}`,
-      });
+      return null;
     }
     if (!author.username) {
-      // user the ExternalUsername
+      // use the ExternalUsername
       if (!author.externalUsername) {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -95,7 +91,11 @@ export const postsRouter = createTRPCRouter({
 
       if (!post) throw new TRPCError({ code: "NOT_FOUND" });
 
-      return (await addUserDataToPosts([post]))[0];
+      const postWithUserData = (await addUserDataToPosts([post]))[0];
+
+      if (!postWithUserData) throw new TRPCError({ code: "NOT_FOUND" });
+
+      return postWithUserData;
     }),
 
   getPostsByUserId: publicProcedure
@@ -115,7 +115,6 @@ export const postsRouter = createTRPCRouter({
         })
         .then(addUserDataToPosts)
     ),
-
   create: privateProcedure
     .input(
       z.object({

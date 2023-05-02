@@ -39,14 +39,12 @@ export const createTRPCContext = (opts: CreateNextContextOptions) => {
 /**
  * 2. INITIALIZATION
  *
- * This is where the tRPC API is initialized, connecting the context and transformer. We also parse
- * ZodErrors so that you get typesafety on the frontend if your procedure fails due to validation
- * errors on the backend.
+ * This is where the tRPC API is initialized, connecting the context and transformer.
  */
-import { TRPCError, initTRPC } from "@trpc/server";
+import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
-import { ZodError } from "zod";
 import { getAuth } from "@clerk/nextjs/server";
+import { ZodError } from "zod";
 
 const t = initTRPC.context<typeof createTRPCContext>().create({
   transformer: superjson,
